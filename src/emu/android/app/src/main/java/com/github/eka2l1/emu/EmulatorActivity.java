@@ -286,7 +286,39 @@ public class EmulatorActivity extends AppCompatActivity {
         }
         super.openOptionsMenu();
     }
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (isQinF22()) {
+            int keyCode = event.getKeyCode();
+            int mappedKeyCode = keyCode;
 
+            if (keyCode == KeyEvent.KEYCODE_MENU) {
+                mappedKeyCode = KeyEvent.KEYCODE_SOFT_LEFT;
+            } else if (keyCode == KeyEvent.KEYCODE_BACK) {
+                mappedKeyCode = KeyEvent.KEYCODE_SOFT_RIGHT;
+            } else if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+                mappedKeyCode = KeyEvent.KEYCODE_ENTER;
+            }
+
+            if (mappedKeyCode != keyCode) {
+                KeyEvent mappedEvent = new KeyEvent(
+                        event.getDownTime(),
+                        event.getEventTime(),
+                        event.getAction(),
+                        mappedKeyCode,
+                        event.getRepeatCount(),
+                        event.getMetaState(),
+                        event.getDeviceId(),
+                        event.getScanCode(),
+                        event.getFlags(),
+                        event.getSource());
+
+                return super.dispatchKeyEvent(mappedEvent);
+            }
+        }
+
+        return super.dispatchKeyEvent(event);
+    }
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -507,7 +539,16 @@ public class EmulatorActivity extends AppCompatActivity {
     private int convertAndroidKeyCode(int keyCode) {
         return androidToSymbian.get(keyCode, Integer.MAX_VALUE);
     }
+    private boolean isQinF22() {
+        String manufacturer = Build.MANUFACTURER == null ? "" : Build.MANUFACTURER;
+        String model = Build.MODEL == null ? "" : Build.MODEL;
 
+        manufacturer = manufacturer.toUpperCase(java.util.Locale.ROOT);
+        model = model.toUpperCase(java.util.Locale.ROOT);
+
+        return model.contains("F22")
+                || (manufacturer.contains("QIN") && model.contains("22"));
+    }
     private void onPermissionResult(Map<String, Boolean> status) {
         permissionsLauncherDone.release();
     }
